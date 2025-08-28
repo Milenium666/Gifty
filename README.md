@@ -17,7 +17,6 @@ Gift Helper — современное Angular-приложение для по�
 
 - Сборка: `nx build`
 - Запуск: `nx serve`
-- Unit-тесты: `nx test`
 - Seed Firestore:
   ```
   FIREBASE_SERVICE_ACCOUNT_PATH=~/Документы/T-Bank/firebase_admin/service-account.json npx ts-node --project tsconfig.tools.json tools/seed-firestore.ts
@@ -37,26 +36,18 @@ Gift Helper — современное Angular-приложение для по�
     ```
     nx test
     ```
-4. Запустите e2e-тесты:
-    ```
-    npx playwright test
-    ```
-5. Для наполнения Firestore:
+4. Для наполнения Firestore:
     ```
     FIREBASE_SERVICE_ACCOUNT_PATH=~/Документы/T-Bank/firebase_admin/service-account.json npx ts-node --project tsconfig.tools.json tools/seed-firestore.ts
     ```
 
 ## Тестирование
 
-- Unit-тесты покрывают утилиты и бизнес-логику
+- Unit-тесты покрывают утилиты
 
 ## Контакты
 
 Автор: Падун Елена
-
-## Ссылка на проект 
-
-[Ссылка на проект](https://course-work-48fb70.edu-gitlab.ru)
 
 ## Структура проекта
 
