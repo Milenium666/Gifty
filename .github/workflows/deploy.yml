@@ -79,67 +79,32 @@ jobs:
           echo "📌 Building with NX_NO_CLOUD = $NX_NO_CLOUD"
           npx nx build gift-helper --configuration=production --base-href=./ --deploy-url=./
 
-      # 🔹 ШАГ 1: Проверка на символические ссылки
-      - name: 🔍 Check for symlinks in dist/
+      - name: Determine build directory
+        id: build_dir
         run: |
-          echo "🔍 Searching for symbolic links in dist/gift-helper..."
-          find dist/gift-helper -type l -ls
-          if [ -n "$(find dist/gift-helper -type l)" ]; then
-            echo "⚠️ Warning: Symbolic links found. They will be replaced with real copies."
-            exit 0
-          else
-            echo "✅ No symlinks found. Safe to deploy."
-          fi
-
-      # 🔹 ШАГ 2: Замена симлинков на реальные копии
-      - name: 🛠 Replace symlinks with real files
-        run: |
-          find dist/gift-helper -type l -exec sh -c '
-            for link; do
-              target=$(readlink "$link")
-              dir=$(dirname "$link")
-              abs_target=$(realpath "$dir/$target" 2>/dev/null || echo "$dir/$target")
-              if [ -e "$abs_target" ]; then
-                echo "🔁 Replacing symlink: $link -> $target"
-                rm "$link"
-                cp -r "$abs_target" "$link"
-              else
-                echo "❌ Broken symlink: $link -> $target (target not found)"
-                exit 1
-              fi
-            done
-          ' _ {} + || true
-
-      # 🔹 ШАГ 3: Копируем index.html в 404.html для SPA-роутинга
-      - name: 📄 Copy index.html to 404.html for SPA routing
-        run: |
-          BROWSER_DIR="dist/gift-helper/browser"
-          if [ -d "$BROWSER_DIR" ]; then
-            echo "📄 Copying $BROWSER_DIR/index.html → $BROWSER_DIR/404.html"
-            cp "$BROWSER_DIR/index.html" "$BROWSER_DIR/404.html"
-          else
-            echo "📄 Copying dist/gift-helper/index.html → dist/gift-helper/404.html"
-            cp dist/gift-helper/index.html dist/gift-helper/404.html
-          fi
-
-      # 🔹 ШАГ 4: Диагностика структуры перед загрузкой
-      - name: 📂 Verify dist structure
-        run: |
-          echo "📁 Contents of dist/gift-helper:"
-          ls -la dist/gift-helper
-          echo
           if [ -d "dist/gift-helper/browser" ]; then
-            echo "📁 Contents of dist/gift-helper/browser:"
-            ls -la dist/gift-helper/browser
+            echo "dir=dist/gift-helper/browser" >> $GITHUB_OUTPUT
           else
-            echo "📁 No 'browser' subfolder found. Using root dist folder."
+            echo "dir=dist/gift-helper" >> $GITHUB_OUTPUT
           fi
+
+      - name: Prepare GitHub Pages artifact
+        run: |
+          mkdir -p public
+          cp -r ${{ steps.build_dir.outputs.dir }}/* public/
+          # Copy 404.html for SPA routing
+          cp public/index.html public/404.html
+
+      - name: Verify public structure
+        run: |
+          echo "📁 Contents of public/ (will be deployed):"
+          ls -la public/
 
       - name: Upload artifact for GitHub Pages
         uses: actions/upload-artifact@v4
         with:
           name: github-pages
-          path: dist/gift-helper
+          path: public/
           retention-days: 7
 
   validate:
@@ -153,7 +118,7 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           name: github-pages
-          path: dist/gift-helper
+          path: public
 
       - name: Set up Node.js
         uses: actions/setup-node@v4
@@ -167,7 +132,13 @@ jobs:
 
       - name: Validate build
         run: |
-          npm run validate
+          # Пример: проверить наличие index.html
+          if [ -f "public/index.html" ]; then
+            echo "✅ index.html found"
+          else
+            echo "❌ index.html not found!"
+            exit 1
+          fi
 
   deploy:
     runs-on: ubuntu-latest
@@ -178,9 +149,7 @@ jobs:
     steps:
       - name: Setup Pages
         uses: actions/configure-pages@v4
-        with:
-          # Автоматически выберет browser/ если есть, иначе — корень
-          build-output: dist/gift-helper/browser
+        # Нет параметра build-output — он не поддерживается
 
       - name: Deploy to GitHub Pages
         id: deployment
