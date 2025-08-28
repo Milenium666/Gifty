@@ -91,26 +91,41 @@ jobs:
       - name: Prepare GitHub Pages artifact
         run: |
           mkdir -p public
-          # Используем cp с опцией -L — копировать по ссылкам (разыменовывать)
           cp -rL ${{ steps.build_dir.outputs.dir }}/* public/
-          # Копируем 404.html
           cp public/index.html public/404.html
 
-      - name: 🔍 Check for symlinks in public/
+      - name: 🔁 Replace any remaining symlinks with real files
         run: |
-          echo "🔍 Searching for symbolic links in public/..."
-          find public -type l -ls
-          if [ -n "$(find public -type l)" ]; then
-            echo "❌ ERROR: Symbolic links found in public/. GitHub Pages does not allow symlinks."
+          echo "🔁 Replacing any symbolic links in public/ with real copies..."
+          find public -type l | while read link; do
+            target="$(readlink "$link")"
+            dir="$(dirname "$link")"
+            abs_target="$dir/$target"
+            if [ -e "$abs_target" ]; then
+              echo "🔁 Converting symlink: $link → $abs_target"
+              rm "$link"
+              cp -r "$abs_target" "$link"
+            else
+              echo "❌ Broken symlink: $link -> $target"
+              exit 1
+            fi
+          done
+
+      - name: 🔍 Final check for symlinks
+        run: |
+          echo "🔍 Final check: searching for any remaining symlinks in public/..."
+          if find public -type l -ls | grep -q .; then
+            echo "❌ ERROR: Some symbolic links still exist in public/. Deployment will fail."
             exit 1
           else
-            echo "✅ No symlinks found in public/. Safe to deploy."
+            echo "✅ No symbolic links found. Safe to deploy."
           fi
 
       - name: Verify public structure
         run: |
-          echo "📁 Contents of public/ (will be deployed):"
+          echo "📁 Contents of public/:"
           ls -la public/
+          ls -la public/assets/ || true
 
       - name: Upload artifact for GitHub Pages
         uses: actions/upload-artifact@v4
