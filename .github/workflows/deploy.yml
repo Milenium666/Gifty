@@ -125,13 +125,16 @@ jobs:
         run: |
           echo "📁 Contents of public/:"
           ls -la public/
-          ls -la public/assets/ || true
+
+      - name: Create ZIP artifact (required for reliable GitHub Pages deploy)
+        run: |
+          cd public && zip -r ../github-pages.zip ./*
 
       - name: Upload artifact for GitHub Pages
         uses: actions/upload-artifact@v4
         with:
           name: github-pages
-          path: public/
+          path: github-pages.zip
           retention-days: 7
 
   validate:
@@ -145,23 +148,14 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           name: github-pages
-          path: public
-
-      - name: Set up Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: '20.17.0'
-          cache: 'npm'
-
-      - name: Install dependencies
+          path: temp-zip
+        # Распакуем, чтобы проверить
+      - name: Unzip and validate
         run: |
-          npm ci --no-audit --no-fund
-
-      - name: Validate build
-        run: |
-          # Пример: проверить наличие index.html
+          mkdir -p public
+          unzip temp-zip/github-pages.zip -d public
           if [ -f "public/index.html" ]; then
-            echo "✅ index.html found"
+            echo "✅ index.html found in unzipped artifact"
           else
             echo "❌ index.html not found!"
             exit 1
@@ -176,7 +170,6 @@ jobs:
     steps:
       - name: Setup Pages
         uses: actions/configure-pages@v4
-        # Нет параметра build-output — он не поддерживается
 
       - name: Deploy to GitHub Pages
         id: deployment
