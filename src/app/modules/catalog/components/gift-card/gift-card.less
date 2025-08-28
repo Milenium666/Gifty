@@ -1,0 +1,88 @@
+.card {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 12px;
+  align-items: center;
+  padding: 12px;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  position: relative;
+  transition: all 0.2s ease;
+
+  &:hover {
+    border-color: #d1d5db;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+
+    .card__actions {
+      opacity: 1;
+    }
+  }
+
+  &__actions {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    display: grid;
+    gap: 6px;
+    opacity: 0.7;
+    transition: opacity 0.2s ease;
+  }
+
+  &__body {
+    display: grid;
+    grid-template-columns: 120px 1fr;
+    gap: 12px;
+    text-decoration: none;
+    color: inherit;
+  }
+
+  &__image {
+    width: 120px;
+    height: 120px;
+    object-fit: cover;
+    border-radius: 8px;
+    background: #f3f4f6;
+  }
+
+  &__title {
+    margin: 0 0 6px;
+    font-size: 16px;
+  }
+
+  &__desc {
+    margin: 0 0 6px;
+    color: #4b5563;
+    font-size: 14px;
+  }
+
+  &__meta {
+    margin: 0;
+    color: #6b7280;
+    font-size: 12px;
+  }
+
+  &__actions {
+    button,
+    a {
+      font-size: 14px;
+      padding: 6px 12px;
+      border-radius: 6px;
+      transition: all 0.2s ease;
+
+      &:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+      }
+    }
+  }
+  @media (max-width: 600px) {
+    grid-template-columns: 1fr;
+    &__body {
+      grid-template-columns: 80px 1fr;
+    }
+    &__image {
+      width: 80px;
+      height: 80px;
+    }
+  }
+}

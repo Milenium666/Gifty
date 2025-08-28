@@ -1,0 +1,30 @@
+.favorites {
+  display: grid;
+  gap: 16px;
+  padding: 16px;
+
+  &__title {
+    margin: 0;
+  }
+
+  &__list {
+    display: grid;
+    gap: 12px;
+  }
+
+  &__empty {
+    margin-top: 24px;
+    padding: 16px;
+    border: 1px dashed #e5e7eb;
+    border-radius: 8px;
+    background: #fafafa;
+    display: grid;
+    gap: 8px;
+    justify-items: start;
+  }
+
+  @media (max-width: 600px) {
+    padding: 12px;
+  }
+}
+

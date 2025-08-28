@@ -1,0 +1,95 @@
+<div class="auth-container">
+    <div class="auth-card">
+      <h1 class="auth-title">{{ isSignUp ? 'Регистрация' : 'Вход в систему' }}</h1>
+      
+      @if (errorMessage) {
+        <div class="error-banner">
+          <span>{{ errorMessage }}</span>
+        </div>
+      }
+
+      <form [formGroup]="isSignUp ? signupForm : loginForm" (ngSubmit)="isSignUp ? signUpWithEmail() : signInWithEmail()" class="login-form">
+        <div class="form-group">
+          <label for="email">Email</label>
+          <input 
+            type="email" 
+            id="email" 
+            [formControlName]="'email'" 
+            placeholder="Введите email"
+            class="form-input" />
+          @if ((isSignUp ? signupForm : loginForm).get('email')?.invalid && (isSignUp ? signupForm : loginForm).get('email')?.touched) {
+            <div class="error-message">
+              Введите корректный email
+            </div>
+          }
+        </div>
+        
+        <div class="form-group">
+          <label for="password">Пароль</label>
+          <input 
+            type="password" 
+            id="password" 
+            [formControlName]="'password'" 
+            placeholder="Введите пароль"
+            class="form-input" />
+          @if ((isSignUp ? signupForm : loginForm).get('password')?.invalid && (isSignUp ? signupForm : loginForm).get('password')?.touched) {
+            <div class="error-message">
+              Пароль должен содержать минимум 6 символов
+            </div>
+          }
+        </div>
+
+        @if (isSignUp) {
+          <div class="form-group">
+            <label for="confirmPassword">Подтвердите пароль</label>
+            <input 
+              type="password" 
+              id="confirmPassword" 
+              formControlName="confirmPassword" 
+              placeholder="Повторите пароль"
+              class="form-input" />
+            @if (signupForm.get('confirmPassword')?.invalid && signupForm.get('confirmPassword')?.touched) {
+              <div class="error-message">
+                @if (signupForm.get('confirmPassword')?.errors?.['required']) {
+                  <span>Подтвердите пароль</span>
+                }
+                @if (signupForm.get('confirmPassword')?.errors?.['passwordMismatch']) {
+                  <span>Пароли не совпадают</span>
+                }
+              </div>
+            }
+          </div>
+        }
+        
+        <button 
+          type="submit" 
+          class="auth-button email-button"
+          tuiButton appearance="primary"
+          [disabled]="(isSignUp ? signupForm : loginForm).invalid || isLoading">
+          {{ isSignUp ? 'Зарегистрироваться' : 'Войти' }}
+        </button>
+      </form>
+      
+      <div class="auth-footer">
+        @if (!isSignUp) {
+          <p>
+            Нет аккаунта? 
+            <a href="#" (click)="toggleMode(); $event.preventDefault()" class="auth-link">Зарегистрироваться</a>
+          </p>
+        }
+        @if (isSignUp) {
+          <p>
+            Уже есть аккаунт? 
+            <a href="#" (click)="toggleMode(); $event.preventDefault()" class="auth-link">Войти</a>
+          </p>
+        }
+      </div>
+      
+      @if (isLoading) {
+        <div class="loading">
+          <div class="spinner"></div>
+          <span>Вход в систему...</span>
+        </div>
+      }
+    </div>
+  </div>

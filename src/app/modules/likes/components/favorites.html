@@ -1,0 +1,10 @@
+<section class="favorites">
+  <h2 class="favorites__title">Избранное</h2>
+  <div #favVc class="favorites__list"></div>
+  @if (isEmpty) {
+    <div class="favorites__empty">
+      <p>В избранном пока пусто.</p>
+      <a routerLink="/catalog" tuiButton appearance="primary">Перейти в каталог</a>
+    </div>
+  }
+</section>

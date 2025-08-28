@@ -1,0 +1,54 @@
+<header class="header">
+  <nav class="header__nav">
+    <div class="header__nav-left">
+      <a routerLink="/" class="header__brand">Gift Helper</a>
+    </div>
+    <div class="header__nav-right">
+      @if (user$ | async; as user) {
+        @if (isCatalog) {
+          <a routerLink="/likes" class="header__link">Избранное</a>
+        } @else if (isLikes) {
+          <a routerLink="/catalog" class="header__link">Подарки</a>
+        }
+        <div class="header__auth">
+          <div class="user-menu">
+            <div class="user-menu__trigger"
+                 (click)="toggleUserMenu()"
+                 tabindex="0"
+                 role="button"
+                 aria-label="Открыть меню пользователя">
+              <div class="user-menu__avatar">
+                @if (user.photoURL) {
+                  <img [src]="user.photoURL" [alt]="user.displayName || 'Пользователь'" (error)="onImageError($event)" />
+                } @else {
+                  <div class="user-menu__avatar-placeholder">
+                    {{ (user.displayName || user.email || 'U').charAt(0).toUpperCase() }}
+                  </div>
+                }
+              </div>
+              <span class="user-menu__name">{{ user.displayName || user.email }}</span>
+              <svg class="user-menu__arrow" [class.user-menu__arrow_rotated]="isUserMenuOpen" viewBox="0 0 24 24">
+                <path d="M7 10l5 5 5-5z"/>
+              </svg>
+            </div>
+            <div class="user-menu__dropdown" [class.user-menu__dropdown_open]="isUserMenuOpen">
+              <div class="user-menu__dropdown-item">
+                <span class="user-menu__dropdown-label">Email:</span>
+                <span class="user-menu__dropdown-value">{{ user.email }}</span>
+              </div>
+              <button type="button" class="user-menu__dropdown-button" tuiButton appearance="secondary" (click)="logout()">
+                <svg class="user-menu__logout-icon" viewBox="0 0 24 24">
+                  <path d="M17 7l-1.41 1.41L18.17 11H8v2h10.17l-2.58 2.59L17 17l5-5z"/>
+                  <path d="M4 5h8V3H4c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h8v-2H4V5z"/>
+                </svg>
+                Выйти
+              </button>
+            </div>
+          </div>
+        </div>
+      } @else {
+        <a routerLink="/auth" class="header__auth-link" tuiButton appearance="flat">Войти</a>
+      }
+    </div>
+  </nav>
+</header>

@@ -1,0 +1,25 @@
+@if (gift) {
+  <article class="card">
+  <a [routerLink]="isClickable ? ['/catalog', gift.id] : null" class="card__body" [attr.tabindex]="isClickable ? null : -1" (click)="$event.preventDefault()" [style.pointer-events]="isClickable ? null : 'none'">
+  <img class="card__image" [src]="gift.imageUrl" (error)="onImageError($event)" alt="Подарок" />
+    <div class="card__content">
+      <h3 class="card__title">{{ gift.title }}</h3>
+      <p class="card__desc">{{ gift.description }}</p>
+      <p class="card__meta">{{ gift.category }} • {{ gift.priceRange }}</p>
+    </div>
+  </a>
+  <div class="card__actions">
+    <button tuiButton 
+            size="m" 
+            appearance="flat" 
+            (click)="toggleFavorite()" 
+            [disabled]="isLoading$ | async"
+            [attr.aria-pressed]="isFavorite$ | async"
+            [attr.title]="(isFavorite$ | async) ? 'Убрать из избранного' : 'Добавить в избранное'"
+            aria-label="Избранное">
+      {{ (isLoading$ | async) ? '⏳' : ((isFavorite$ | async) ? '★' : '☆') }}
+    </button>
+    <a tuiButton size="m" appearance="flat" [routerLink]="['/catalog', gift.id]">Подробнее</a>
+  </div>
+  </article>
+}

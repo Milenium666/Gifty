@@ -1,0 +1,28 @@
+@if (gift) {
+<section class="gift">
+  <nav class="gifts__breadcrumbs" style="margin-bottom: 8px">
+    <a routerLink="/">Главная</a> / <a routerLink="/catalog">Каталог</a> /
+    <span>{{ gift.title }}</span>
+  </nav>
+  <div class="gift__card-id">
+    <h2 class="gift__title">{{ gift.title }}</h2>
+    <img
+      class="gift__image"
+      [src]="gift.imageUrl || 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjQwIiBoZWlnaHQ9IjI0MCIgdmlld0JveD0iMCAwIDI0MCAyNDAiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxyZWN0IHdpZHRoPSIyNDAiIGhlaWdodD0iMjQwIiBmaWxsPSIjRjNGNEY2Ii8+CjxwYXRoIGQ9Ik0xMjAgMTQwQzEzMi41NDMgMTQwIDE0Mi41IDMwLjA5NzIgMTQyLjUgMTUuMDQ4NkMxNDIuNSA2LjY5NzcyIDEzNS44MDIgMCAxMjcgMEMxMTguMTk4IDAgMTExLjUgNi42OTc3MiAxMTEuNSAxNS4wNDg2QzExMS41IDMwLjA5NzIgMTIxLjQ1NyAxNFAgMTIwIDE0MFoiIGZpbGw9IiM5Q0EzQUYiLz4KPHBhdGggZD0iTTEwNSAxMjBDMTA1IDEyMCAxMDUgMTIwIDEwNSAxMjBDMTA1IDEyMCAxMDUgMTIwIDEwNSAxMjBaIiBmaWxsPSIjOUNBM0FGIi8+Cjwvc3ZnPgo='"
+      alt=""
+    />
+    <p class="gift__desc">{{ gift.description }}</p>
+    <p class="gift__meta">{{ gift.category }} • {{ gift.priceRange }}</p>
+  </div>
+  @if (relatedGifts$ | async; as related) { @if (related.length) {
+  <section class="gift__related">
+    <h3>Похожие подарки</h3>
+    <div class="gifts__list">
+      @for (r of related; track r.id) {
+      <app-gift-item [gift]="r"></app-gift-item>
+      }
+    </div>
+  </section>
+  } }
+</section>
+}

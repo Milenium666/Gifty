@@ -1,0 +1,70 @@
+<section class="home">
+  <div class="home__hero">
+    <div class="home__hero-emoji">🎁</div>
+    <h1 class="home__hero-title">Подберите идеальный подарок</h1>
+    <p class="home__hero-desc">Ответьте на несколько вопросов — и мы подберём для вас лучшие идеи подарков для любого случая и бюджета.</p>
+  </div>
+  @if (stage === 'form') {
+    <form class="home__finder" [formGroup]="form" (ngSubmit)="submit()">
+      <div class="home__field">
+        <label for="occasion">Повод</label>
+        <tui-textfield>
+          <select
+            id="occasion"
+            tuiSelect
+            [items]="occasions"
+            placeholder="Выберите повод"
+            formControlName="occasion"
+            required
+          ></select>
+        </tui-textfield>
+      </div>
+
+      <div class="home__field">
+        <label for="budget">Бюджет</label>
+        <tui-textfield>
+          <select
+            id="budget"
+            tuiSelect
+            [items]="budgets"
+            placeholder="Выберите бюджет"
+            formControlName="budget"
+            required
+          ></select>
+        </tui-textfield>
+      </div>
+
+      <fieldset class="home__field">
+        <legend>Интересы</legend>
+        <div class="home__chips" formArrayName="interests">
+          @for (interest of interestsList; let i = $index; track interest) {
+            <label class="home__chip">
+              <input type="checkbox" tuiCheckbox [formControlName]="i" />
+              <span>{{ interest }}</span>
+            </label>
+          }
+        </div>
+      </fieldset>
+
+  <button type="submit" class="home__button home__button_primary home__cta" tuiButton appearance="primary">🔍 Найти подарок</button>
+    </form>
+  }
+
+  @if (stage === 'loading') {
+    <div class="home__loading">
+      <div class="home__spinner"></div>
+      Думаем над подарком…
+    </div>
+  }
+
+  @if (stage === 'result' && selectedGift) {
+    <div class="home__result">
+      <app-gift-item [gift]="selectedGift" [isClickable]="false" />
+      <div class="home__actions">
+        <button type="button" class="home__button home__button_secondary" tuiButton appearance="secondary" (click)="viewCatalog()">Посмотреть другие подарки</button>
+      </div>
+    </div>
+  }
+</section>
+
+

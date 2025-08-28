@@ -1,0 +1,56 @@
+<section class="gifts">
+  <header class="gifts__header">
+    <h2 class="gifts__title">Подарки</h2>
+    <nav class="gifts__breadcrumbs">
+      <a routerLink="/">Главная</a> / <span>Каталог</span>
+    </nav>
+    <form [formGroup]="filterForm" class="gifts__form">
+      <div class="gifts__row">
+        <div class="gifts__field gifts__field_search">
+          <label for="searchInput" class="gifts__label">Поиск</label>
+          <input id="searchInput" class="gifts__input" type="text" placeholder="По названию/описанию" formControlName="search" />
+        </div>
+
+        <div class="gifts__field gifts__field_budget">
+          <label for="budgetSelect" class="gifts__label">Бюджет</label>
+          <tui-textfield>
+            <select id="budgetSelect" tuiSelect class="gifts__select"
+                    [items]="budgetsOptions"
+                    [labels]="budgetsLabels"
+                    formControlName="budget"></select>
+          </tui-textfield>
+        </div>
+
+        <div class="gifts__field gifts__field_reset">
+          <div class="gifts__label">&nbsp;</div>
+          <button class="gifts__reset" type="button" tuiButton appearance="secondary" (click)="resetFilters()">Сбросить</button>
+        </div>
+      </div>
+
+      <div class="gifts__field gifts__field_categories" formArrayName="interests">
+        <div class="gifts__label">Категории</div>
+        <div class="gifts__chips">
+          @for (cat of interests; let i = $index; track cat) {
+            <label class="gifts__chip">
+              <input type="checkbox" tuiCheckbox [formControlName]="i" />
+              <span>{{ cat }}</span>
+            </label>
+          }
+        </div>
+      </div>
+    </form>
+  </header>
+
+  <div class="gifts__list">
+    @if (filteredGifts$ | async; as gifts) {
+      @for (gift of gifts; track gift.id) {
+        <app-gift-item [gift]="gift"></app-gift-item>
+      }
+    } @else {
+      <div class="gifts__empty">
+        <p>Ничего не найдено. Попробуйте изменить фильтры.</p>
+        <button tuiButton appearance="secondary" type="button" (click)="resetFilters()">Сбросить фильтры</button>
+      </div>
+    }
+  </div>
+</section>
