@@ -149,11 +149,11 @@ jobs:
         with:
           name: github-pages
           path: temp-zip
-        # Распакуем, чтобы проверить
+
       - name: Unzip and validate
         run: |
           mkdir -p public
-          unzip temp-zip/github-pages.zip -d public
+          unzip -o temp-zip/github-pages.zip -d public
           if [ -f "public/index.html" ]; then
             echo "✅ index.html found in unzipped artifact"
           else
