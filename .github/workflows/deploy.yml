@@ -91,9 +91,21 @@ jobs:
       - name: Prepare GitHub Pages artifact
         run: |
           mkdir -p public
-          cp -r ${{ steps.build_dir.outputs.dir }}/* public/
-          # Copy 404.html for SPA routing
+          # Используем cp с опцией -L — копировать по ссылкам (разыменовывать)
+          cp -rL ${{ steps.build_dir.outputs.dir }}/* public/
+          # Копируем 404.html
           cp public/index.html public/404.html
+
+      - name: 🔍 Check for symlinks in public/
+        run: |
+          echo "🔍 Searching for symbolic links in public/..."
+          find public -type l -ls
+          if [ -n "$(find public -type l)" ]; then
+            echo "❌ ERROR: Symbolic links found in public/. GitHub Pages does not allow symlinks."
+            exit 1
+          else
+            echo "✅ No symlinks found in public/. Safe to deploy."
+          fi
 
       - name: Verify public structure
         run: |
