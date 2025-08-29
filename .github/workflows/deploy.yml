@@ -1,121 +1,121 @@
-name: Deploy to GitHub Pages
+# name: Deploy to GitHub Pages
 
-on:
-  push:
-    branches:
-      - main
+# on:
+#   push:
+#     branches:
+#       - main
 
-permissions:
-  contents: read
-  pages: write
-  id-token: write
+# permissions:
+#   contents: read
+#   pages: write
+#   id-token: write
 
-concurrency:
-  group: pages
-  cancel-in-progress: true
+# concurrency:
+#   group: pages
+#   cancel-in-progress: true
 
-jobs:
-  build:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout code 📂
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 0  # Все коммиты — важно для Pages
+# jobs:
+#   build:
+#     runs-on: ubuntu-latest
+#     steps:
+#       - name: Checkout code 📂
+#         uses: actions/checkout@v4
+#         with:
+#           fetch-depth: 0  # Все коммиты — важно для Pages
 
-      - name: Set up Node.js 🚀
-        uses: actions/setup-node@v4
-        with:
-          node-version: '20.17.0'
-          cache: 'npm'
+#       - name: Set up Node.js 🚀
+#         uses: actions/setup-node@v4
+#         with:
+#           node-version: '20.17.0'
+#           cache: 'npm'
 
-      - name: Install dependencies 🔧
-        run: |
-          npm ci --no-audit --no-fund
+#       - name: Install dependencies 🔧
+#         run: |
+#           npm ci --no-audit --no-fund
 
-      - name: Build application 🏗️
-        run: |
-          export NX_NO_CLOUD=1
-          echo "📌 NX_NO_CLOUD = $NX_NO_CLOUD"
-          npx nx build gift-helper --configuration=production --base-href=./ --deploy-url=./
+#       - name: Build application 🏗️
+#         run: |
+#           export NX_NO_CLOUD=1
+#           echo "📌 NX_NO_CLOUD = $NX_NO_CLOUD"
+#           npx nx build gift-helper --configuration=production --base-href=./ --deploy-url=./
 
-      - name: Validate build output 🔍
-        run: |
-          echo "🔎 Checking for index.html..."
-          find dist -name index.html -type f
-          if ! find dist -path "*/gift-helper/*/index.html" -type f | grep -q .; then
-            echo "❌ index.html not found in dist/gift-helper!"
-            exit 1
-          fi
+#       - name: Validate build output 🔍
+#         run: |
+#           echo "🔎 Checking for index.html..."
+#           find dist -name index.html -type f
+#           if ! find dist -path "*/gift-helper/*/index.html" -type f | grep -q .; then
+#             echo "❌ index.html not found in dist/gift-helper!"
+#             exit 1
+#           fi
 
-      - name: Determine build directory 🧭
-        id: build_dir
-        run: |
-          if [ -d "dist/gift-helper/browser" ]; then
-            DIR="dist/gift-helper/browser"
-          else
-            DIR="dist/gift-helper"
-          fi
-          if [ ! -f "$DIR/index.html" ]; then
-            echo "❌ index.html not found in $DIR"
-            exit 1
-          fi
-          echo "Using build directory: $DIR"
-          echo "dir=$DIR" >> $GITHUB_OUTPUT
+#       - name: Determine build directory 🧭
+#         id: build_dir
+#         run: |
+#           if [ -d "dist/gift-helper/browser" ]; then
+#             DIR="dist/gift-helper/browser"
+#           else
+#             DIR="dist/gift-helper"
+#           fi
+#           if [ ! -f "$DIR/index.html" ]; then
+#             echo "❌ index.html not found in $DIR"
+#             exit 1
+#           fi
+#           echo "Using build directory: $DIR"
+#           echo "dir=$DIR" >> $GITHUB_OUTPUT
 
-      - name: Prepare static site 📁
-        run: |
-          mkdir -p public
-          cp -rL "${{ steps.build_dir.outputs.dir }}/"* public/
-          cp public/index.html public/404.html
-          touch public/.nojekyll
+#       - name: Prepare static site 📁
+#         run: |
+#           mkdir -p public
+#           cp -rL "${{ steps.build_dir.outputs.dir }}/"* public/
+#           cp public/index.html public/404.html
+#           touch public/.nojekyll
 
-      - name: Replace symlinks (safety) 🔁
-        run: |
-          find public -type l | while read link; do
-            target="$(readlink "$link")"
-            abs_target="$(dirname "$link")/$target"
-            if [ -e "$abs_target" ]; then
-              rm "$link"
-              cp -r "$abs_target" "$link"
-            else
-              echo "❌ Broken symlink: $link -> $target"
-              exit 1
-            fi
-          done
+#       - name: Replace symlinks (safety) 🔁
+#         run: |
+#           find public -type l | while read link; do
+#             target="$(readlink "$link")"
+#             abs_target="$(dirname "$link")/$target"
+#             if [ -e "$abs_target" ]; then
+#               rm "$link"
+#               cp -r "$abs_target" "$link"
+#             else
+#               echo "❌ Broken symlink: $link -> $target"
+#               exit 1
+#             fi
+#           done
 
-      - name: Final symlink check ✅
-        run: |
-          if find public -type l | grep -q .; then
-            echo "❌ ERROR: Symlinks still present!"
-            find public -type l -ls
-            exit 1
-          else
-            echo "✅ No symlinks — safe to deploy"
-          fi
+#       - name: Final symlink check ✅
+#         run: |
+#           if find public -type l | grep -q .; then
+#             echo "❌ ERROR: Symlinks still present!"
+#             find public -type l -ls
+#             exit 1
+#           else
+#             echo "✅ No symlinks — safe to deploy"
+#           fi
 
-      - name: Show site structure 🗂️
-        run: |
-          echo "📁 public/ contents:"
-          ls -la public/
-          echo "🗃 Total files: $(find public -type f | wc -l)"
-          du -sh public/
+#       - name: Show site structure 🗂️
+#         run: |
+#           echo "📁 public/ contents:"
+#           ls -la public/
+#           echo "🗃 Total files: $(find public -type f | wc -l)"
+#           du -sh public/
 
-      - name: Upload artifact 📤
-        uses: actions/upload-pages-artifact@v3
-        with:
-          path: public
+#       - name: Upload artifact 📤
+#         uses: actions/upload-pages-artifact@v3
+#         with:
+#           path: public
 
-  deploy:
-    needs: build
-    runs-on: ubuntu-latest
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
-    permissions:
-      pages: write
-      id-token: write
-    steps:
-      - name: Deploy to GitHub Pages 🚀
-        id: deployment
-        uses: actions/deploy-pages@v4
+#   deploy:
+#     needs: build
+#     runs-on: ubuntu-latest
+#     environment:
+#       name: github-pages
+#       url: ${{ steps.deployment.outputs.page_url }}
+#     permissions:
+#       pages: write
+#       id-token: write
+#     steps:
+#       - name: Deploy to GitHub Pages 🚀
+#         id: deployment
+#         uses: actions/deploy-pages@v4
