@@ -15,97 +15,67 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  install:
+  build:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout code
+      - name: Checkout code 📂
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # Все коммиты — важно для Pages
 
-      - name: Set up Node.js
+      - name: Set up Node.js 🚀
         uses: actions/setup-node@v4
         with:
           node-version: '20.17.0'
           cache: 'npm'
 
-      - name: Install dependencies
+      - name: Install dependencies 🔧
         run: |
           npm ci --no-audit --no-fund
 
-  lint:
-    runs-on: ubuntu-latest
-    needs: install
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Set up Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: '20.17.0'
-          cache: 'npm'
-
-      - name: Install dependencies
-        run: |
-          npm ci --no-audit --no-fund
-
-      - name: Lint code
+      - name: Build application 🏗️
         run: |
           export NX_NO_CLOUD=1
           echo "📌 NX_NO_CLOUD = $NX_NO_CLOUD"
-          printenv | grep NX || true
-          npx nx reset
-          npx nx lint gift-helper --skip-nx-cache
-
-  build:
-    runs-on: ubuntu-latest
-    needs: lint
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Set up Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: '20.17.0'
-          cache: 'npm'
-
-      - name: Install dependencies
-        run: |
-          npm ci --no-audit --no-fund
-
-      - name: Build application
-        run: |
-          export NX_NO_CLOUD=1
-          echo "📌 Building with NX_NO_CLOUD = $NX_NO_CLOUD"
           npx nx build gift-helper --configuration=production --base-href=./ --deploy-url=./
 
-      - name: Determine build directory
+      - name: Validate build output 🔍
+        run: |
+          echo "🔎 Checking for index.html..."
+          find dist -name index.html -type f
+          if ! find dist -path "*/gift-helper/*/index.html" -type f | grep -q .; then
+            echo "❌ index.html not found in dist/gift-helper!"
+            exit 1
+          fi
+
+      - name: Determine build directory 🧭
         id: build_dir
         run: |
           if [ -d "dist/gift-helper/browser" ]; then
-            echo "dir=dist/gift-helper/browser" >> $GITHUB_OUTPUT
+            DIR="dist/gift-helper/browser"
           else
-            echo "dir=dist/gift-helper" >> $GITHUB_OUTPUT
+            DIR="dist/gift-helper"
           fi
+          if [ ! -f "$DIR/index.html" ]; then
+            echo "❌ index.html not found in $DIR"
+            exit 1
+          fi
+          echo "Using build directory: $DIR"
+          echo "dir=$DIR" >> $GITHUB_OUTPUT
 
-      - name: Prepare GitHub Pages artifact
+      - name: Prepare static site 📁
         run: |
           mkdir -p public
-          cp -rL ${{ steps.build_dir.outputs.dir }}/* public/
-          # SPA routing
+          cp -rL "${{ steps.build_dir.outputs.dir }}/"* public/
           cp public/index.html public/404.html
-          # Disable Jekyll processing
           touch public/.nojekyll
 
-      - name: 🔁 Replace any remaining symlinks with real files
+      - name: Replace symlinks (safety) 🔁
         run: |
-          echo "🔁 Replacing any symbolic links in public/ with real copies..."
           find public -type l | while read link; do
             target="$(readlink "$link")"
-            dir="$(dirname "$link")"
-            abs_target="$dir/$target"
+            abs_target="$(dirname "$link")/$target"
             if [ -e "$abs_target" ]; then
-              echo "🔁 Converting symlink: $link → $abs_target"
               rm "$link"
               cp -r "$abs_target" "$link"
             else
@@ -114,66 +84,38 @@ jobs:
             fi
           done
 
-      - name: 🔍 Final check for symlinks
+      - name: Final symlink check ✅
         run: |
-          echo "🔍 Final check: searching for any remaining symlinks in public/..."
-          if find public -type l -ls | grep -q .; then
-            echo "❌ ERROR: Some symbolic links still exist in public/. Deployment will fail."
+          if find public -type l | grep -q .; then
+            echo "❌ ERROR: Symlinks still present!"
+            find public -type l -ls
             exit 1
           else
-            echo "✅ No symbolic links found. Safe to deploy."
+            echo "✅ No symlinks — safe to deploy"
           fi
 
-      - name: Verify public structure
+      - name: Show site structure 🗂️
         run: |
-          echo "📁 Contents of public/:"
+          echo "📁 public/ contents:"
           ls -la public/
+          echo "🗃 Total files: $(find public -type f | wc -l)"
+          du -sh public/
 
-      - name: Create ZIP artifact (required for reliable GitHub Pages deploy)
-        run: |
-          cd public && zip -r ../github-pages.zip ./*
-
-      - name: Upload artifact for GitHub Pages
-        uses: actions/upload-artifact@v4
+      - name: Upload artifact 📤
+        uses: actions/upload-pages-artifact@v3
         with:
-          name: github-pages
-          path: github-pages.zip
-          retention-days: 7
-
-  validate:
-    runs-on: ubuntu-latest
-    needs: build
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Download artifact
-        uses: actions/download-artifact@v4
-        with:
-          name: github-pages
-          path: temp-zip
-
-      - name: Unzip and validate
-        run: |
-          mkdir -p public
-          unzip -o temp-zip/github-pages.zip -d public
-          if [ -f "public/index.html" ]; then
-            echo "✅ index.html found in unzipped artifact"
-          else
-            echo "❌ index.html not found!"
-            exit 1
-          fi
+          path: public
 
   deploy:
+    needs: build
     runs-on: ubuntu-latest
-    needs: validate
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
+    permissions:
+      pages: write
+      id-token: write
     steps:
-      - name: Setup Pages
-        uses: actions/configure-pages@v4
-
-      - name: Deploy to GitHub Pages
+      - name: Deploy to GitHub Pages 🚀
         id: deployment
         uses: actions/deploy-pages@v4
